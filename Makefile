@@ -1,4 +1,4 @@
-ATMOSPHERE_LIBRARIES := libmesosphere libstratosphere
+ATMOSPHERE_LIBRARIES := libstratosphere
 
 TOPTARGETS := all clean
 

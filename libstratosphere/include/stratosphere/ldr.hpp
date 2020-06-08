@@ -17,5 +17,3 @@
 #pragma once
 
 #include <stratosphere/ldr/ldr_types.hpp>
-#include <stratosphere/ldr/ldr_shell_api.hpp>
-#include <stratosphere/ldr/ldr_pm_api.hpp>

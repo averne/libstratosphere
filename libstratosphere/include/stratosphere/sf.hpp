@@ -17,8 +17,6 @@
 #pragma once
 
 #include <stratosphere/sf/sf_common.hpp>
-#include <stratosphere/sf/sf_lmem_utility.hpp>
-#include <stratosphere/sf/sf_mem_utility.hpp>
 #include <stratosphere/sf/sf_service_object.hpp>
 #include <stratosphere/sf/hipc/sf_hipc_server_session_manager.hpp>
 
