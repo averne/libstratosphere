@@ -17,5 +17,4 @@
 #pragma once
 
 #include "spl/spl_types.hpp"
-#include "spl/spl_api.hpp"
 #include "spl/smc/spl_smc.hpp"

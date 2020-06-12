@@ -37,7 +37,7 @@ namespace ams::hos {
 
             /* Hos version is a direct copy of target firmware, just renamed. */
             g_hos_version = static_cast<hos::Version>(exosphere::GetApiInfo().GetTargetFirmware());
-            AMS_ABORT_UNLESS(g_hos_version <= hos::Version_Max);
+            // AMS_ABORT_UNLESS(g_hos_version <= hos::Version_Max);
 
             __atomic_store_n(&g_has_cached, true, __ATOMIC_SEQ_CST);
         }

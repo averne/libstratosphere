@@ -17,14 +17,12 @@
 #pragma once
 
 #include <stratosphere/os/os_common_types.hpp>
-#include <stratosphere/os/os_tick.hpp>
 #include <stratosphere/os/os_memory_common.hpp>
 #include <stratosphere/os/os_memory_permission.hpp>
 #include <stratosphere/os/os_memory_heap_api.hpp>
 #include <stratosphere/os/os_memory_virtual_address_api.hpp>
 #include <stratosphere/os/os_managed_handle.hpp>
 #include <stratosphere/os/os_process_handle.hpp>
-#include <stratosphere/os/os_random.hpp>
 #include <stratosphere/os/os_mutex.hpp>
 #include <stratosphere/os/os_condvar.hpp>
 #include <stratosphere/os/os_rw_lock.hpp>

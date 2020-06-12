@@ -28,12 +28,7 @@
 #include <vapours/util/util_bitset.hpp>
 #include <vapours/util/util_bitflagset.hpp>
 #include <vapours/util/util_bitutil.hpp>
-#include <vapours/util/util_typed_storage.hpp>
 #include <vapours/util/util_fourcc.hpp>
-#include <vapours/util/util_intrusive_list.hpp>
-#include <vapours/util/util_intrusive_red_black_tree.hpp>
-#include <vapours/util/util_tinymt.hpp>
-#include <vapours/util/util_uuid.hpp>
-#include <vapours/util/util_bounded_map.hpp>
-#include <vapours/util/util_string_util.hpp>
 #include <vapours/util/util_variadic.hpp>
+#include <vapours/util/util_parent_of_member.hpp>
+#include <vapours/util/util_intrusive_list.hpp>

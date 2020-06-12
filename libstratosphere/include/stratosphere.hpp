@@ -19,9 +19,6 @@
 /* libvapours (pulls in util, svc, results). */
 #include <vapours.hpp>
 
-/* Libstratosphere definitions. */
-#include <stratosphere/ams/impl/ams_system_thread_definitions.hpp>
-
 /* Sadly required shims. */
 #include <stratosphere/svc/svc_stratosphere_shims.hpp>
 
@@ -34,9 +31,7 @@
 
 /* At this point, just include the rest alphabetically. */
 /* TODO: Figure out optimal order. */
-#include <stratosphere/fatal.hpp>
 #include <stratosphere/hos.hpp>
-#include <stratosphere/pm.hpp>
 #include <stratosphere/sf.hpp>
 #include <stratosphere/sm.hpp>
 #include <stratosphere/spl.hpp>

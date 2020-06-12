@@ -18,5 +18,4 @@
 
 #include "ams/ams_types.hpp"
 #include "ams/ams_exosphere_api.hpp"
-#include "ams/ams_emummc_api.hpp"
 #include "ams/ams_environment.hpp"
