@@ -15,9 +15,7 @@
  */
 
 #pragma once
-#include <stratosphere/os/os_rw_lock_common.hpp>
-#include <stratosphere/os/os_rw_lock_types.hpp>
-#include <stratosphere/os/os_rw_lock_api.hpp>
+#include "os_common_types.hpp"
 
 namespace ams::os {
 
@@ -25,82 +23,66 @@ namespace ams::os {
         NON_COPYABLE(ReadWriteLock);
         NON_MOVEABLE(ReadWriteLock);
         private:
-            ReadWriteLockType rw_lock;
+            ::RwLock r;
         public:
-            constexpr explicit ReadWriteLock() : rw_lock{{}, 0, ::ams::os::ReadWriteLockType::State_Initialized, nullptr, 0, {}, {}} { /* ... */ }
-
-            ~ReadWriteLock() { os::FinalizeReadWriteLock(std::addressof(this->rw_lock)); }
-
-            void AcquireReadLock() {
-                return os::AcquireReadLock(std::addressof(this->rw_lock));
-            }
-
-            bool TryAcquireReadLock() {
-                return os::TryAcquireReadLock(std::addressof(this->rw_lock));
-            }
-
-            void ReleaseReadLock() {
-                return os::ReleaseReadLock(std::addressof(this->rw_lock));
-            }
-
-            void AcquireWriteLock() {
-                return os::AcquireWriteLock(std::addressof(this->rw_lock));
-            }
-
-            bool TryAcquireWriteLock() {
-                return os::TryAcquireWriteLock(std::addressof(this->rw_lock));
-            }
-
-            void ReleaseWriteLock() {
-                return os::ReleaseWriteLock(std::addressof(this->rw_lock));
-            }
-
-            bool IsReadLockHeld() const {
-                return os::IsReadLockHeld(std::addressof(this->rw_lock));
+            ReadWriteLock() {
+                rwlockInit(&this->r);
             }
 
             bool IsWriteLockHeldByCurrentThread() const {
-                return os::IsWriteLockHeldByCurrentThread(std::addressof(this->rw_lock));
+                return rwlockIsWriteLockHeldByCurrentThread(const_cast<::RwLock *>(&this->r));
             }
 
             bool IsLockOwner() const {
-                return os::IsReadWriteLockOwnerThread(std::addressof(this->rw_lock));
+                return rwlockIsOwnedByCurrentThread(const_cast<::RwLock *>(&this->r));
+            }
+
+            void AcquireReadLock() {
+                rwlockReadLock(&this->r);
+            }
+
+            void ReleaseReadLock() {
+                rwlockReadUnlock(&this->r);
+            }
+
+            bool TryAcquireReadLock() {
+                return rwlockTryReadLock(&this->r);
+            }
+
+            void AcquireWriteLock() {
+                rwlockWriteLock(&this->r);
+            }
+
+            void ReleaseWriteLock() {
+                rwlockWriteUnlock(&this->r);
+            }
+
+            bool TryAcquireWriteLock() {
+                return rwlockTryWriteLock(&this->r);
             }
 
             void lock_shared() {
-                return this->AcquireReadLock();
+                this->AcquireReadLock();
+            }
+
+            void unlock_shared() {
+                this->ReleaseReadLock();
             }
 
             bool try_lock_shared() {
                 return this->TryAcquireReadLock();
             }
 
-            void unlock_shared() {
-                return this->ReleaseReadLock();
+            void lock() {
+                this->AcquireWriteLock();
             }
 
-            void lock() {
-                return this->AcquireWriteLock();
+            void unlock() {
+                this->ReleaseWriteLock();
             }
 
             bool try_lock() {
                 return this->TryAcquireWriteLock();
-            }
-
-            void unlock() {
-                return this->ReleaseWriteLock();
-            }
-
-            operator ReadWriteLockType &() {
-                return this->rw_lock;
-            }
-
-            operator const ReadWriteLockType &() const {
-                return this->rw_lock;
-            }
-
-            ReadWriteLockType *GetBase() {
-                return std::addressof(this->rw_lock);
             }
     };
 

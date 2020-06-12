@@ -37,10 +37,6 @@ namespace ams::os::impl {
                 return this->impl.GetTick();
             }
 
-            ALWAYS_INLINE Tick GetSystemTickOrdered() const {
-                return this->impl.GetSystemTickOrdered();
-            }
-
             ALWAYS_INLINE s64 GetTickFrequency() const {
                 return this->impl.GetTickFrequency();
             }

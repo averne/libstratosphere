@@ -181,7 +181,7 @@ extern "C" {
 
 /* Custom abort handler, so that std::abort will trigger these. */
 void abort() {
-    static ams::os::Mutex abort_lock(true);
+    static ams::os::RecursiveMutex abort_lock;
     std::scoped_lock lk(abort_lock);
 
     ams::AbortImpl();

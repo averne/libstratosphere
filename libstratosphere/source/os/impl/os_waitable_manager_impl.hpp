@@ -16,17 +16,11 @@
 #pragma once
 #include "os_waitable_holder_base.hpp"
 
-#if defined(ATMOSPHERE_OS_HORIZON)
-    #include "os_waitable_manager_target_impl.os.horizon.hpp"
-#else
-    #error "Unknown OS for ams::os::WaitableManagerTargetImpl"
-#endif
-
 namespace ams::os::impl {
 
     class WaitableManagerImpl {
         public:
-            static constexpr size_t MaximumHandleCount = WaitableManagerTargetImpl::MaximumHandleCount;
+            static constexpr size_t MaximumHandleCount = 0x40;
             static constexpr s32 WaitInvalid   = -3;
             static constexpr s32 WaitCancelled = -2;
             static constexpr s32 WaitTimedOut  = -1;
@@ -34,30 +28,31 @@ namespace ams::os::impl {
         private:
             ListType waitable_list;
             WaitableHolderBase *signaled_holder;
-            TimeSpan current_time;
-            InternalCriticalSection cs_wait;
-            WaitableManagerTargetImpl target_impl;
+            u64 current_time;
+            Mutex lock;
+            Handle waiting_thread_handle;
         private:
-            WaitableHolderBase *WaitAnyImpl(bool infinite, TimeSpan timeout);
-            WaitableHolderBase *WaitAnyHandleImpl(bool infinite, TimeSpan timeout);
-            s32                BuildHandleArray(Handle out_handles[], WaitableHolderBase *out_objects[], s32 num);
+            WaitableHolderBase *WaitAnyImpl(bool infinite, u64 timeout);
+            WaitableHolderBase *WaitAnyHandleImpl(bool infinite, u64 timeout);
+            s32                 WaitSynchronization(Handle *handles, size_t count, u64 timeout);
+            size_t              BuildHandleArray(Handle *out_handles, WaitableHolderBase **out_objects);
 
             WaitableHolderBase *LinkHoldersToObjectList();
             void                UnlinkHoldersFromObjectList();
 
-            WaitableHolderBase *RecalculateNextTimeout(TimeSpan *out_min_timeout, TimeSpan end_time);
+            WaitableHolderBase *RecalculateNextTimeout(u64 *out_min_timeout, u64 end_time);
         public:
             /* Wait. */
             WaitableHolderBase *WaitAny() {
-                return this->WaitAnyImpl(true, TimeSpan::FromNanoSeconds(std::numeric_limits<s64>::max()));
+                return this->WaitAnyImpl(true, std::numeric_limits<u64>::max());
             }
 
             WaitableHolderBase *TryWaitAny() {
-                return this->WaitAnyImpl(false, TimeSpan(0));
+                return this->WaitAnyImpl(false, 0);
             }
 
-            WaitableHolderBase *TimedWaitAny(TimeSpan ts) {
-                return this->WaitAnyImpl(false, ts);
+            WaitableHolderBase *TimedWaitAny(u64 timeout) {
+                return this->WaitAnyImpl(false, timeout);
             }
 
             /* List management. */
@@ -89,7 +84,7 @@ namespace ams::os::impl {
             }
 
             /* Other. */
-            TimeSpan GetCurrentTime() const {
+            u64 GetCurrentTime() const {
                 return this->current_time;
             }
 

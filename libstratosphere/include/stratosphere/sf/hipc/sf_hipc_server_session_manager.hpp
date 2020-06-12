@@ -38,7 +38,7 @@ namespace ams::sf::hipc {
 
     }
 
-    class ServerSession : public os::WaitableHolderType {
+    class ServerSession : public os::WaitableHolder {
         friend class ServerSessionManager;
         friend class ServerManagerBase;
         friend class impl::HipcManager;
@@ -54,16 +54,14 @@ namespace ams::sf::hipc {
             bool is_closed;
             bool has_received;
         public:
-            ServerSession(Handle h, cmif::ServiceObjectHolder &&obj) : srv_obj_holder(std::move(obj)), session_handle(h) {
-                hipc::AttachWaitableHolderForReply(this, h);
+            ServerSession(Handle h, cmif::ServiceObjectHolder &&obj) : WaitableHolder(h), srv_obj_holder(std::move(obj)), session_handle(h) {
                 this->is_closed = false;
                 this->has_received = false;
                 this->forward_service = nullptr;
                 AMS_ABORT_UNLESS(!this->IsMitmSession());
             }
 
-            ServerSession(Handle h, cmif::ServiceObjectHolder &&obj, std::shared_ptr<::Service> &&fsrv) : srv_obj_holder(std::move(obj)), session_handle(h) {
-                hipc::AttachWaitableHolderForReply(this, h);
+            ServerSession(Handle h, cmif::ServiceObjectHolder &&obj, std::shared_ptr<::Service> &&fsrv) : WaitableHolder(h), srv_obj_holder(std::move(obj)), session_handle(h) {
                 this->is_closed = false;
                 this->has_received = false;
                 this->forward_service = std::move(fsrv);

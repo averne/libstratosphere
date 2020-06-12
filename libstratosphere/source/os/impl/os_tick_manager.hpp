@@ -27,8 +27,4 @@ namespace ams::os::impl {
         return GetTickManager().GetTick();
     }
 
-    ALWAYS_INLINE Tick GetCurrentTickOrdered() {
-        return GetTickManager().GetSystemTickOrdered();
-    }
-
 }

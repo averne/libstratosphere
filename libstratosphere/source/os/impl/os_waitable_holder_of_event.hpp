@@ -21,29 +21,29 @@ namespace ams::os::impl {
 
     class WaitableHolderOfEvent : public WaitableHolderOfUserObject {
         private:
-            EventType *event;
+            Event *event;
         private:
             TriBool IsSignaledImpl() const {
                 return this->event->signaled ? TriBool::True : TriBool::False;
             }
         public:
-            explicit WaitableHolderOfEvent(EventType *e) : event(e) { /* ... */ }
+            explicit WaitableHolderOfEvent(Event *e) : event(e) { /* ... */ }
 
             /* IsSignaled, Link, Unlink implemented. */
             virtual TriBool IsSignaled() const override {
-                std::scoped_lock lk(GetReference(this->event->cs_event));
+                std::scoped_lock lk(this->event->lock);
                 return this->IsSignaledImpl();
             }
 
             virtual TriBool LinkToObjectList() override {
-                std::scoped_lock lk(GetReference(this->event->cs_event));
+                std::scoped_lock lk(this->event->lock);
 
                 GetReference(this->event->waitable_object_list_storage).LinkWaitableHolder(*this);
                 return this->IsSignaledImpl();
             }
 
             virtual void UnlinkFromObjectList() override {
-                std::scoped_lock lk(GetReference(this->event->cs_event));
+                std::scoped_lock lk(this->event->lock);
 
                 GetReference(this->event->waitable_object_list_storage).UnlinkWaitableHolder(*this);
             }

@@ -18,24 +18,37 @@
 
 namespace ams::os::impl {
 
-    Result CreateInterProcessEvent(InterProcessEventType *event, EventClearMode clear_mode);
-    void DestroyInterProcessEvent(InterProcessEventType *event);
+    class WaitableHolderOfInterProcessEvent;
 
-    void AttachInterProcessEvent(InterProcessEventType *event, Handle read_handle, bool read_handle_managed, Handle write_handle, bool write_handle_managed, EventClearMode clear_mode);
+    class InterProcessEvent {
+        friend class WaitableHolderOfInterProcessEvent;
+        NON_COPYABLE(InterProcessEvent);
+        NON_MOVEABLE(InterProcessEvent);
+        private:
+            Handle read_handle;
+            Handle write_handle;
+            bool manage_read_handle;
+            bool manage_write_handle;
+            bool auto_clear;
+            bool is_initialized;
+        public:
+            InterProcessEvent() : is_initialized(false) { /* ... */ }
+            InterProcessEvent(bool autoclear);
+            ~InterProcessEvent();
 
-    Handle DetachReadableHandleOfInterProcessEvent(InterProcessEventType *event);
-    Handle DetachWritableHandleOfInterProcessEvent(InterProcessEventType *event);
+            Result Initialize(bool autoclear = true);
+            void   Initialize(Handle read_handle, bool manage_read_handle, Handle write_handle, bool manage_write_handle, bool autoclear = true);
+            Handle DetachReadableHandle();
+            Handle DetachWritableHandle();
+            Handle GetReadableHandle() const;
+            Handle GetWritableHandle() const;
+            void Finalize();
 
-    void WaitInterProcessEvent(InterProcessEventType *event);
-    bool TryWaitInterProcessEvent(InterProcessEventType *event);
-    bool TimedWaitInterProcessEvent(InterProcessEventType *event, TimeSpan timeout);
-
-    void SignalInterProcessEvent(InterProcessEventType *event);
-    void ClearInterProcessEvent(InterProcessEventType *event);
-
-    Handle GetReadableHandleOfInterProcessEvent(const InterProcessEventType *event);
-    Handle GetWritableHandleOfInterProcessEvent(const InterProcessEventType *event);
-
-    void InitializeWaitableHolder(WaitableHolderType *waitable_holder, InterProcessEventType *event);
+            void Signal();
+            void Reset();
+            void Wait();
+            bool TryWait();
+            bool TimedWait(u64 ns);
+    };
 
 }

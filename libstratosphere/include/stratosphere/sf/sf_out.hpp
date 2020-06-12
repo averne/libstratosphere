@@ -33,9 +33,9 @@ namespace ams::sf {
     struct IsOutForceEnabled<::ams::Result> : public std::true_type{};
 
     template<typename T>
-    concept OutEnabled = (std::is_trivial<T>::value || IsOutForceEnabled<T>::value) && !std::is_pointer<T>::value;
+    using IsOutEnabled = typename std::enable_if<std::is_trivial<T>::value || IsOutForceEnabled<T>::value>::type;
 
-    template<typename T> requires OutEnabled<T>
+    template<typename T, typename = IsOutEnabled<T>>
     class Out : public impl::OutBaseTag {
         public:
             static constexpr size_t TypeSize = sizeof(T);

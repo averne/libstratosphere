@@ -22,10 +22,6 @@ namespace ams::os {
         return impl::GetTickManager().GetTick();
     }
 
-    Tick GetSystemTickOrdered() {
-        return impl::GetTickManager().GetSystemTickOrdered();
-    }
-
     s64 GetSystemTickFrequency() {
         return impl::GetTickManager().GetTickFrequency();
     }

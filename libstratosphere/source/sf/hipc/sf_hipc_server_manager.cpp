@@ -34,56 +34,56 @@ namespace ams::sf::hipc {
         session->has_received = false;
 
         /* Set user data tag. */
-        os::SetWaitableHolderUserData(session, static_cast<uintptr_t>(UserDataTag::Session));
+        session->SetUserData(static_cast<uintptr_t>(UserDataTag::Session));
 
         this->RegisterToWaitList(session);
     }
 
-    void ServerManagerBase::RegisterToWaitList(os::WaitableHolderType *holder) {
+    void ServerManagerBase::RegisterToWaitList(os::WaitableHolder *holder) {
         std::scoped_lock lk(this->waitlist_mutex);
-        os::LinkWaitableHolder(std::addressof(this->waitlist), holder);
+        this->waitlist.LinkWaitableHolder(holder);
         this->notify_event.Signal();
     }
 
     void ServerManagerBase::ProcessWaitList() {
         std::scoped_lock lk(this->waitlist_mutex);
-        os::MoveAllWaitableHolder(std::addressof(this->waitable_manager), std::addressof(this->waitlist));
+        this->waitable_manager.MoveAllFrom(&this->waitlist);
     }
 
-    os::WaitableHolderType *ServerManagerBase::WaitSignaled() {
+    os::WaitableHolder *ServerManagerBase::WaitSignaled() {
         std::scoped_lock lk(this->waitable_selection_mutex);
         while (true) {
             this->ProcessWaitList();
-            auto selected = os::WaitAny(std::addressof(this->waitable_manager));
+            auto selected = this->waitable_manager.WaitAny();
             if (selected == &this->request_stop_event_holder) {
                 return nullptr;
             } else if (selected == &this->notify_event_holder) {
-                this->notify_event.Clear();
+                this->notify_event.Reset();
             } else {
-                os::UnlinkWaitableHolder(selected);
+                selected->UnlinkFromWaitableManager();
                 return selected;
             }
         }
     }
 
     void ServerManagerBase::ResumeProcessing() {
-        this->request_stop_event.Clear();
+        this->request_stop_event.Reset();
     }
 
     void ServerManagerBase::RequestStopProcessing() {
         this->request_stop_event.Signal();
     }
 
-    void ServerManagerBase::AddUserWaitableHolder(os::WaitableHolderType *waitable) {
-        const auto user_data_tag = static_cast<UserDataTag>(os::GetWaitableHolderUserData(waitable));
+    void ServerManagerBase::AddUserWaitableHolder(os::WaitableHolder *waitable) {
+        const auto user_data_tag = static_cast<UserDataTag>(waitable->GetUserData());
         AMS_ABORT_UNLESS(user_data_tag != UserDataTag::Server);
         AMS_ABORT_UNLESS(user_data_tag != UserDataTag::MitmServer);
         AMS_ABORT_UNLESS(user_data_tag != UserDataTag::Session);
         this->RegisterToWaitList(waitable);
     }
 
-    Result ServerManagerBase::ProcessForServer(os::WaitableHolderType *holder) {
-        AMS_ABORT_UNLESS(static_cast<UserDataTag>(os::GetWaitableHolderUserData(holder)) == UserDataTag::Server);
+    Result ServerManagerBase::ProcessForServer(os::WaitableHolder *holder) {
+        AMS_ABORT_UNLESS(static_cast<UserDataTag>(holder->GetUserData()) == UserDataTag::Server);
 
         ServerBase *server = static_cast<ServerBase *>(holder);
         ON_SCOPE_EXIT { this->RegisterToWaitList(server); };
@@ -100,8 +100,8 @@ namespace ams::sf::hipc {
         return this->AcceptSession(server->port_handle, std::move(obj));
     }
 
-    Result ServerManagerBase::ProcessForMitmServer(os::WaitableHolderType *holder) {
-        AMS_ABORT_UNLESS(static_cast<UserDataTag>(os::GetWaitableHolderUserData(holder)) == UserDataTag::MitmServer);
+    Result ServerManagerBase::ProcessForMitmServer(os::WaitableHolder *holder) {
+        AMS_ABORT_UNLESS(static_cast<UserDataTag>(holder->GetUserData()) == UserDataTag::MitmServer);
 
         ServerBase *server = static_cast<ServerBase *>(holder);
         ON_SCOPE_EXIT { this->RegisterToWaitList(server); };
@@ -118,8 +118,8 @@ namespace ams::sf::hipc {
         return this->AcceptMitmSession(server->port_handle, std::move(obj), std::move(fsrv));
     }
 
-    Result ServerManagerBase::ProcessForSession(os::WaitableHolderType *holder) {
-        AMS_ABORT_UNLESS(static_cast<UserDataTag>(os::GetWaitableHolderUserData(holder)) == UserDataTag::Session);
+    Result ServerManagerBase::ProcessForSession(os::WaitableHolder *holder) {
+        AMS_ABORT_UNLESS(static_cast<UserDataTag>(holder->GetUserData()) == UserDataTag::Session);
 
         ServerSession *session = static_cast<ServerSession *>(holder);
 
@@ -176,8 +176,8 @@ namespace ams::sf::hipc {
         }
     }
 
-    Result ServerManagerBase::Process(os::WaitableHolderType *holder) {
-        switch (static_cast<UserDataTag>(os::GetWaitableHolderUserData(holder))) {
+    Result ServerManagerBase::Process(os::WaitableHolder *holder) {
+        switch (static_cast<UserDataTag>(holder->GetUserData())) {
             case UserDataTag::Server:
                 return this->ProcessForServer(holder);
                 break;

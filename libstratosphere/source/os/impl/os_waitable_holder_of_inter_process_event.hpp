@@ -21,9 +21,9 @@ namespace ams::os::impl {
 
     class WaitableHolderOfInterProcessEvent : public WaitableHolderOfKernelObject {
         private:
-            InterProcessEventType *event;
+            InterProcessEvent *event;
         public:
-            explicit WaitableHolderOfInterProcessEvent(InterProcessEventType *e) : event(e) { /* ... */ }
+            explicit WaitableHolderOfInterProcessEvent(InterProcessEvent *e) : event(e) { /* ... */ }
 
             /* IsSignaled, GetHandle both implemented. */
             virtual TriBool IsSignaled() const override {
@@ -31,7 +31,8 @@ namespace ams::os::impl {
             }
 
             virtual Handle GetHandle() const override {
-                return this->event->readable_handle;
+                AMS_ABORT_UNLESS(this->event->is_initialized);
+                return this->event->GetReadableHandle();
             }
     };
 
