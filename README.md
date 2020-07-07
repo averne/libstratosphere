@@ -6,6 +6,13 @@ It is built around extending [libnx](https://github.com/switchbrew/libnx).
 
 It also provides bindings for custom extensions to Horizon OS implemented by [Atmosphère](https://github.com/Atmosphere-NX).
 
+This fork focuses on developer convenience and ease of maintenance, because the original moves too fast and gets rewritten too often to be desirable in an external project.
+
+It also provides some simple "examples" of usage:
+  - Service hosting
+  - Service mitm (man-in-the-middle)
+  - Client applet homebrew
+
 Licensing
 =====
 
