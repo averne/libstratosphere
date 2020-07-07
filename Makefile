@@ -1,10 +1,144 @@
-ATMOSPHERE_LIBRARIES := libstratosphere
+#---------------------------------------------------------------------------------
+.SUFFIXES:
+#---------------------------------------------------------------------------------
 
-TOPTARGETS := all clean
+ifeq ($(strip $(DEVKITPRO)),)
+$(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>/devkitpro")
+endif
 
-$(TOPTARGETS): $(ATMOSPHERE_LIBRARIES)
+include $(DEVKITPRO)/libnx/switch_rules
 
-$(ATMOSPHERE_LIBRARIES):
-	$(MAKE) -C $@ $(MAKECMDGOALS)
+#---------------------------------------------------------------------------------
+# TARGET is the name of the output
+# SOURCES is a list of directories containing source code
+# DATA is a list of directories containing data files
+# INCLUDES is a list of directories containing header files
+#---------------------------------------------------------------------------------
+TARGET		:=	stratosphere
+SOURCES		:=	source/ams     source/diag    source/hos    \
+				source/os      source/os/impl source/result \
+				source/sf/cmif source/sf/hipc source/sm     \
+				source/spl/smc
+DATA		:=	data
+INCLUDES	:=  include
 
-.PHONY: $(TOPTARGETS) $(ATMOSPHERE_LIBRARIES)
+#---------------------------------------------------------------------------------
+# options for code generation
+#---------------------------------------------------------------------------------
+ARCH	:=	-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
+
+CFLAGS	:=	-g -Wall \
+			-ffunction-sections -fdata-sections \
+			-fno-strict-aliasing -fwrapv -fno-asynchronous-unwind-tables -fno-unwind-tables -fno-stack-protector \
+			$(ARCH) \
+			$(BUILD_CFLAGS) \
+			-D__SWITCH__ \
+			-DATMOSPHERE_ARCH_ARM64 -DATMOSPHERE_BOARD_NINTENDO_NX -DATMOSPHERE_OS_HORIZON \
+			-DATMOSPHERE_IS_STRATOSPHERE -D_GNU_SOURCE
+
+CFLAGS	+=	$(INCLUDE)
+
+CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++20
+
+ASFLAGS	:=	-g $(ARCH)
+
+#---------------------------------------------------------------------------------
+# list of directories containing libraries, this must be the top level containing
+# include and lib
+#---------------------------------------------------------------------------------
+LIBDIRS := $(PORTLIBS) $(LIBNX)
+
+#---------------------------------------------------------------------------------
+# no real need to edit anything past this point unless you need to add additional
+# rules for different file extensions
+#---------------------------------------------------------------------------------
+ifneq ($(BUILD),$(notdir $(CURDIR)))
+#---------------------------------------------------------------------------------
+
+export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
+			$(foreach dir,$(DATA),$(CURDIR)/$(dir))
+
+CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
+CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
+SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
+BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
+
+#---------------------------------------------------------------------------------
+# use CXX for linking C++ projects, CC for standard C
+#---------------------------------------------------------------------------------
+ifeq ($(strip $(CPPFILES)),)
+#---------------------------------------------------------------------------------
+	export LD	:=	$(CC)
+#---------------------------------------------------------------------------------
+else
+#---------------------------------------------------------------------------------
+	export LD	:=	$(CXX)
+#---------------------------------------------------------------------------------
+endif
+#---------------------------------------------------------------------------------
+
+export OFILES_BIN	:=	$(addsuffix .o,$(BINFILES))
+export OFILES_SRC	:=	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
+export OFILES 	:=	$(OFILES_BIN) $(OFILES_SRC)
+export HFILES	:=	$(addsuffix .h,$(subst .,_,$(BINFILES)))
+
+export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
+			$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
+			-I$(CURDIR)/$(BUILD)
+
+.PHONY: clean all
+
+#---------------------------------------------------------------------------------
+all: lib/lib$(TARGET).a
+
+lib:
+	@[ -d $@ ] || mkdir -p $@
+
+release:
+	@[ -d $@ ] || mkdir -p $@
+
+lib/lib$(TARGET).a : lib release $(SOURCES) $(INCLUDES)
+	@$(MAKE) BUILD=release OUTPUT=$(CURDIR)/$@ \
+	BUILD_CFLAGS="-DNDEBUG=1 -O2" \
+	DEPSDIR=$(CURDIR)/release \
+	--no-print-directory -C release \
+	-f $(CURDIR)/Makefile
+
+dist-bin: all
+	@tar --exclude=*~ -cjf lib$(TARGET).tar.bz2 include lib
+
+dist-src:
+	@tar --exclude=*~ -cjf lib$(TARGET)-src.tar.bz2 include source Makefile
+
+dist: dist-src dist-bin
+
+#---------------------------------------------------------------------------------
+clean:
+	@echo clean ...
+	@rm -fr release lib *.bz2
+
+#---------------------------------------------------------------------------------
+else
+
+DEPENDS	:=	$(OFILES:.o=.d)
+
+#---------------------------------------------------------------------------------
+# main targets
+#---------------------------------------------------------------------------------
+$(OUTPUT)	:	$(OFILES)
+
+$(OFILES_SRC)	: $(HFILES)
+
+#---------------------------------------------------------------------------------
+%_bin.h %.bin.o	:	%.bin
+#---------------------------------------------------------------------------------
+	@echo $(notdir $<)
+	@$(bin2o)
+
+
+-include $(DEPENDS)
+
+#---------------------------------------------------------------------------------------
+endif
+#---------------------------------------------------------------------------------------
+
