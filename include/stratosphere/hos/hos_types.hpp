@@ -56,6 +56,8 @@ namespace ams::hos {
         Version_10_0_2  = ::ams::TargetFirmware_10_0_2,
         Version_10_0_3  = ::ams::TargetFirmware_10_0_3,
         Version_10_0_4  = ::ams::TargetFirmware_10_0_4,
+        Version_10_1_0  = ::ams::TargetFirmware_10_1_0,
+        Version_10_1_1  = ::ams::TargetFirmware_10_1_1,
 
         Version_Current = ::ams::TargetFirmware_Current,
 
