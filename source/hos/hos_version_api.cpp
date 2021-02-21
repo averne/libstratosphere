@@ -62,7 +62,7 @@ namespace ams::hos {
         const u32 major = (hos_version_val >> 24) & 0xFF;
         const u32 minor = (hos_version_val >> 16) & 0xFF;
         const u32 micro = (hos_version_val >>  8) & 0xFF;
-        hosversionSet(MAKEHOSVERSION(major, minor, micro));
+        hosversionSet(MAKEHOSVERSION(major, minor, micro) | BIT(31));
     }
 
 }
