@@ -101,7 +101,6 @@ namespace ams::util {
                 return this->next;
             }
     };
-    static_assert(std::is_literal_type<IntrusiveListNode>::value);
 
     namespace impl {
 

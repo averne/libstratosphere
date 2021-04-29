@@ -46,7 +46,7 @@ namespace ams::sf::hipc {
         protected:
             using ServerDomainSessionManager::DomainEntryStorage;
             using ServerDomainSessionManager::DomainStorage;
-        private:
+        protected:
             class ServerBase : public os::WaitableHolder {
                 friend class ServerManagerBase;
                 template<size_t, typename, size_t>
